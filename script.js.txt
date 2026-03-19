@@ -119,10 +119,25 @@ const refreshIP = async () => {
     `;
 function generateCanvasFingerprint() {
     const canvas = document.getElementById('canvas-fp');
+// WebGL fingerprint
+const webglFP
     const ctx = canvas.getContext('2d');
     
     // Draw fingerprint pattern
     ctx.fillStyle = '#f0f0f0';
     ctx.fillRect(0, 0, 200, 60);
     ctx.fillStyle
+function getWebGLFingerprint() {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    
+    if (!gl) return 'WebGL not supported';
+    
+    // Get renderer/vendor
+    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    const vendor = debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
+    const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+    
+    return `${vendor} | ${renderer}`.replace(/\s+/g, ' ').trim();
+}
 }
