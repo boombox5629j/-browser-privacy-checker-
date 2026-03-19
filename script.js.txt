@@ -109,4 +109,12 @@ function displayResults(data, score, risk) {
         <div class="tip">🌐 Use VPN for sensitive browsing</div>
         <div class="tip">📱 Test in private/incognito mode to see differences</div>
     `;
+function generateCanvasFingerprint() {
+    const canvas = document.getElementById('canvas-fp');
+    const ctx = canvas.getContext('2d');
+    
+    // Draw fingerprint pattern
+    ctx.fillStyle = '#f0f0f0';
+    ctx.fillRect(0, 0, 200, 60);
+    ctx.fillStyle
 }
