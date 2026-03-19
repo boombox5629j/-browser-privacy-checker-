@@ -1,25 +1,17 @@
-// Wait for DOM to load
+// =============================================
+// Browser Privacy Exposure Viewer - script.js
+// Hackathon 2026 | By Ghanshyam Sharmas
+// =============================================
+
 document.addEventListener('DOMContentLoaded', async () => {
     const loading = document.getElementById('loading');
     const results = document.getElementById('results');
-    
-    displayResults();
+    await displayResults();
     loading.classList.add('hidden');
     results.classList.remove('hidden');
 });
 
-// Canvas hash function
-function canvasHash() {
-    const canvas = document.getElementById('canvas-fp');
-    const data = canvas.toDataURL();
-    let hash = 0;
-    for(let i = 0; i < data.length; i++) {
-        hash = ((hash << 5) - hash + data.charCodeAt(i)) >>> 0;
-    }
-    return 'fp_' + Math.abs(hash).toString(16).slice(0,12);
-}
-
-// Canvas fingerprint
+// ========== CANVAS FINGERPRINT ==========
 function generateCanvasFingerprint() {
     const canvas = document.getElementById('canvas-fp');
     const ctx = canvas.getContext('2d');
@@ -28,58 +20,134 @@ function generateCanvasFingerprint() {
     ctx.fillStyle = '#000';
     ctx.font = '14px Arial';
     ctx.fillText('Canvas FP Test ' + Date.now(), 2, 30);
+    ctx.fillStyle = 'rgba(255,0,0,0.2)';
+    ctx.fillRect(10, 5, 80, 20);
 }
 
-// WebGL fingerprint
+function canvasHash() {
+    const canvas = document.getElementById('canvas-fp');
+    const data = canvas.toDataURL();
+    let hash = 0;
+    for (let i = 0; i < data.length; i++) {
+        hash = ((hash << 5) - hash + data.charCodeAt(i)) >>> 0;
+    }
+    return 'fp_' + Math.abs(hash).toString(16).slice(0, 12);
+}
+
+// ========== WEBGL FINGERPRINT ==========
 function getWebGLFingerprint() {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     if (!gl) return 'WebGL not supported';
-    
     const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
     const vendor = debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
     const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
-    
     return `${vendor} | ${renderer}`.replace(/\s+/g, ' ').trim();
 }
 
-// Device model detection
-deviceModel: getDeviceModel(),
-
+// ========== DEVICE MODEL DETECTION ==========
 function getDeviceModel() {
-    const ua = navigator.userAgent.toLowerCase();
+    const ua = navigator.userAgent;
     const w = screen.width, h = screen.height;
-    
-    // iPhone models by resolution
-    const iPhoneModels
 
-// Show all fingerprints
-function showFingerprints() {
+    if (/iPhone/.test(ua)) {
+        const res = Math.max(w, h);
+        if (res >= 2796) return 'iPhone 14 Pro Max / 15 Pro Max';
+        if (res >= 2532) return 'iPhone 12 / 13 / 14 Pro';
+        if (res >= 2340) return 'iPhone 12 Mini / 13 Mini';
+        if (res >= 1792) return 'iPhone XR / 11';
+        if (res >= 1334) return 'iPhone SE / 8';
+        return 'iPhone (Unknown Model)';
+    }
+    if (/iPad/.test(ua)) return 'Apple iPad';
+    if (/Samsung/.test(ua)) {
+        const match = ua.match(/SM-[A-Z0-9]+/);
+        return match ? `Samsung ${match[0]}` : 'Samsung Android';
+    }
+    if (/Pixel/.test(ua)) {
+        const match = ua.match(/Pixel\s?[\dA-Za-z]+/);
+        return match ? `Google ${match[0]}` : 'Google Pixel';
+    }
+    if (/Redmi/.test(ua)) return 'Xiaomi Redmi';
+    if (/Mi\s/.test(ua)) return 'Xiaomi Mi';
+    if (/OnePlus/.test(ua)) return 'OnePlus';
+    if (/Huawei/.test(ua)) return 'Huawei';
+    if (/Android/.test(ua)) return 'Android Device';
+    if (/Win/.test(navigator.platform)) {
+        if (w <= 1366) return 'Windows Laptop (HD)';
+        if (w <= 1920) return 'Windows Desktop / Laptop (FHD)';
+        return 'Windows Desktop (QHD/4K)';
+    }
+    if (/Mac/.test(navigator.platform)) return 'Apple Mac';
+    if (/Linux/.test(navigator.platform)) return 'Linux PC';
+    return 'Unknown Device';
+}
+
+// ========== AUDIO FINGERPRINT ==========
+async function getAudioFingerprint() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = ctx.createOscillator();
+        const analyser = ctx.createAnalyser();
+        const gainNode = ctx.createGain();
+        gainNode.gain.value = 0; // Silent
+        oscillator.connect(analyser);
+        analyser.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        oscillator.type = 'triangle';
+        oscillator.frequency.value = 440;
+        oscillator.start(0);
+        oscillator.stop(ctx.currentTime + 0.1);
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(dataArray);
+        let hash = 0;
+        for (let i = 0; i < 32; i++) hash = ((hash << 5) - hash + dataArray[i]) >>> 0;
+        await ctx.close();
+        return 'audio_' + Math.abs(hash).toString(16).slice(0, 10);
+    } catch (e) {
+        return 'audio_blocked';
+    }
+}
+
+// ========== SHOW ALL FINGERPRINTS ==========
+async function showFingerprints() {
     generateCanvasFingerprint();
     document.getElementById('webgl-info').textContent = getWebGLFingerprint();
     document.getElementById('canvas-hash').textContent = canvasHash();
+    document.getElementById('device-model').textContent = getDeviceModel();
+    document.getElementById('audio-hash').textContent = await getAudioFingerprint();
 }
 
-// Main display function
-function displayResults() {
-    showFingerprints();  // Canvas + WebGL + Hash
-    
+// ========== MAIN DISPLAY ==========
+async function displayResults() {
+    await showFingerprints();
+
     const data = {
-        browser: navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Other',
+        browser: (() => {
+            const ua = navigator.userAgent;
+            if (ua.includes('Edg')) return 'Edge';
+            if (ua.includes('Chrome')) return 'Chrome';
+            if (ua.includes('Firefox')) return 'Firefox';
+            if (ua.includes('Safari')) return 'Safari';
+            return 'Unknown';
+        })(),
         platform: navigator.platform,
         screenWidth: screen.width,
         screenHeight: screen.height,
+        colorDepth: screen.colorDepth,
         language: navigator.language,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         cookiesEnabled: navigator.cookieEnabled,
-        doNotTrack: navigator.doNotTrack,
+        doNotTrack: navigator.doNotTrack || 'Off',
         cpuCores: navigator.hardwareConcurrency || 0,
-        deviceMemory: navigator.deviceMemory || 'N/A'
+        deviceMemory: navigator.deviceMemory || 'N/A',
+        touch: 'ontouchstart' in window,
+        pdfViewer: navigator.pdfViewerEnabled || false
     };
-    
+
     const score = calculateRiskScore(data);
     const risk = getRiskLevel(score);
-    
+
     // Risk meter
     document.getElementById('risk-label').textContent = `${risk.label} Risk`;
     document.getElementById('risk-label').className = risk.color;
@@ -87,22 +155,25 @@ function displayResults() {
     document.getElementById('risk-score').className = risk.color;
     document.getElementById('risk-fill').style.width = `${score}%`;
     document.getElementById('risk-fill').className = `risk-fill ${risk.color}`;
-    
+
     // Device info
     document.getElementById('device-info').innerHTML = `
         <div class="info-item"><span>Browser:</span><span>${data.browser}</span></div>
         <div class="info-item"><span>Platform:</span><span>${data.platform}</span></div>
         <div class="info-item"><span>Cookies:</span><span>${data.cookiesEnabled ? 'Enabled' : 'Disabled'}</span></div>
-        <div class="info-item"><span>Do Not Track:</span><span>${data.doNotTrack || 'Off'}</span></div>
+        <div class="info-item"><span>Do Not Track:</span><span>${data.doNotTrack}</span></div>
+        <div class="info-item"><span>Touchscreen:</span><span>${data.touch ? 'Yes' : 'No'}</span></div>
+        <div class="info-item"><span>PDF Viewer:</span><span>${data.pdfViewer ? 'Yes' : 'No'}</span></div>
     `;
-    
+
     // Screen info
     document.getElementById('screen-info').innerHTML = `
         <div class="info-item"><span>Resolution:</span><span>${data.screenWidth}×${data.screenHeight}</span></div>
+        <div class="info-item"><span>Color Depth:</span><span>${data.colorDepth} bits</span></div>
         <div class="info-item"><span>CPU Cores:</span><span>${data.cpuCores}</span></div>
-        <div class="info-item"><span>Device Memory:</span><span>${data.deviceMemory}</span></div>
+        <div class="info-item"><span>Device Memory:</span><span>${data.deviceMemory} GB</span></div>
     `;
-    
+
     // Location + Real IP
     document.getElementById('location-info').innerHTML = `
         <div class="info-item"><span>Language:</span><span>${data.language}</span></div>
@@ -110,8 +181,7 @@ function displayResults() {
         <div class="info-item"><span>IP City:</span><span>Loading...</span></div>
         <div class="info-item"><span>ISP:</span><span>Loading...</span></div>
     `;
-    
-    // IP fetch
+
     fetch('https://ipapi.co/json/')
         .then(r => r.json())
         .then(ipdata => {
@@ -121,21 +191,24 @@ function displayResults() {
         .catch(() => {
             document.querySelector('#location-info .info-item:nth-child(3) span:last-child').textContent = 'Blocked';
         });
-    
+
     // Protection tips
     document.getElementById('protection-tips').innerHTML = `
-        <div class="tip">🛡️ Brave/Firefox + uBlock Origin</div>
-        <div class="tip">🔒 VPN + CanvasBlocker extension</div>
-        <div class="tip">📱 Test incognito differences</div>
+        <div class="tip">🛡️ Use Brave or Firefox + uBlock Origin</div>
+        <div class="tip">🔒 Enable VPN + CanvasBlocker extension</div>
+        <div class="tip">📱 Compare Incognito vs Normal mode</div>
+        <div class="tip">⚡ Install ClearURLs + User-Agent Switcher</div>
     `;
 }
 
+// ========== RISK SCORING ==========
 function calculateRiskScore(data) {
     let score = 20;
     if (data.cookiesEnabled) score += 20;
     if (data.cpuCores > 4) score += 15;
     if (data.language === 'en-US') score += 10;
-    return Math.min(score + 35, 100);
+    if (data.deviceMemory > 4) score += 10;
+    return Math.min(score + 25, 100);
 }
 
 function getRiskLevel(score) {
