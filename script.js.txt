@@ -95,12 +95,20 @@ function displayResults(data, score, risk) {
         <div class="info-item"><span>Device Memory:</span><span>${data.deviceMemory} GB</span></div>
     `;
     
-    // Location clues
-    document.getElementById('location-info').innerHTML = `
-        <div class="info-item"><span>Language:</span><span>${data.language}</span></div>
-        <div class="info-item"><span>Languages:</span><span>${data.languages}</span></div>
-        <div class="info-item"><span>Time Zone:</span><span>${data.timezone}</span></div>
-    `;
+    // Location info with IP retry
+document.getElementById('location-info').innerHTML = `
+    <div class="info-item"><span>Language:</span><span>${data.language}</span></div>
+    <div class="info-item"><span>Time Zone:</span><span>${data.timezone}</span></div>
+    <div class="info-item"><span>IP City:</span><span>${data.ipCity || 'Loading...'}</span></div>
+    <div class="info-item"><span>Country:</span><span>${data.ipCountry || 'Loading...'}</span></div>
+`;
+
+// Auto-refresh IP every 3 seconds (max 3 tries)
+let ipAttempts = 0;
+const refreshIP = async () => {
+    if (ipAttempts > 2) return;
+    
+    try
     
     // Protection tips
     document.getElementById('protection-tips').innerHTML = `
