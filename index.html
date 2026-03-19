@@ -8,10 +8,10 @@
 </head>
 <body>
     <div class="container">
-        <h1>🕵️ Browser Privacy Exposure Viewer<br><small>by [GHANSHYAM SHARMAS] - Hackathon 2026</small></h1>
-        <p class="subtitle">Websites can track you using this information without cookies</p>
+        <h1>🕵️ Browser Privacy Exposure Viewer<br><small>by GHANSHYAM SHARMAS - Hackathon 2026</small></h1>
+        <p class="subtitle">Websites track you using this information without cookies</p>
         
-        <div id="loading" class="loading">Scanning your browser...</div>
+        <div id="loading" class="loading">🔍 Scanning your browser fingerprint...</div>
         
         <div id="results" class="results hidden">
             <div class="risk-meter">
@@ -24,29 +24,39 @@
             
             <div class="info-grid">
                 <div class="info-card">
-                    <h3>Device & Browser</h3>
+                    <h3>📱 Device & Browser</h3>
                     <div id="device-info"></div>
                 </div>
+                
                 <div class="info-card">
-                    <h3>Screen & Display</h3>
+                    <h3>🖥️ Screen & Hardware</h3>
                     <div id="screen-info"></div>
                 </div>
+                
                 <div class="info-card">
-                    <h3>Location Clues</h3>
+                    <h3>🌍 Location Clues</h3>
                     <div id="location-info"></div>
                 </div>
-<div class="info-card">
-    <h3>🖼️ Canvas Fingerprint</h3>
-    <canvas id="canvas-fp" width="200" height="60" style="border:1px solid #ddd;height:60px;"></canvas>
+                
+                <!-- ✅ FIXED Canvas -->
+                <div class="info-card">
+                    <h3>🖼️ Canvas Fingerprint</h3>
+                    <canvas id="canvas-fp" width="200" height="60" 
+                            style="border:1px solid #ccc; display:block; margin:8px 0;"></canvas>
+                    <small>Your unique canvas rendering (invisible to you)</small>
+                </div>
+                
+                <!-- ✅ WebGL GPU -->
+                <div class="info-card">
+                    <h3>🎮 WebGL GPU Fingerprint</h3>
+                    <div id="webgl-info" 
+                         style="font-family:monospace; background:#f0f8ff; padding:8px; border-radius:4px;"></div>
+                    <small>Graphics card signature (NVIDIA/AMD/Intel)</small>
+                </div>
             </div>
-<div class="info-card">
-    <h3>🎮 WebGL Fingerprint</h3>
-    <div id="webgl-info"></div>
-    <div id="webgl-hash" style="font-family:monospace;font-size:11px;word-break:break-all;background:#f0f8ff;padding:8px;border-radius:4px;margin-top:8px;"></div>
-</div>
             
             <div class="tips">
-                <h3>🔒 How to Protect Yourself</h3>
+                <h3>🛡️ How to Protect Yourself</h3>
                 <div id="protection-tips"></div>
             </div>
         </div>
