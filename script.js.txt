@@ -43,6 +43,16 @@ function getWebGLFingerprint() {
     return `${vendor} | ${renderer}`.replace(/\s+/g, ' ').trim();
 }
 
+// Device model detection
+deviceModel: getDeviceModel(),
+
+function getDeviceModel() {
+    const ua = navigator.userAgent.toLowerCase();
+    const w = screen.width, h = screen.height;
+    
+    // iPhone models by resolution
+    const iPhoneModels
+
 // Show all fingerprints
 function showFingerprints() {
     generateCanvasFingerprint();
