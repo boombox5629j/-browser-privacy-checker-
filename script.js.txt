@@ -18,26 +18,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function parseUserAgent(ua) {
-    const lower = ua.toLowerCase();
-
-    // Mobile detection
-    if (lower.includes('iphone') || lower.includes('ipad')) {
-        if (lower.includes('crios')) return 'Chrome iOS';
+    const lowerUA = ua.toLowerCase();
+    
+    // iPhone/iPad detection FIRST (most important)
+    if (lowerUA.includes('iphone') || lowerUA.includes('ipad')) {
+        if (lowerUA.includes('crios') || lowerUA.includes('chrome')) {
+            return 'Chrome iOS';
+        }
+        if (lowerUA.includes('fxios')) {
+            return 'Firefox iOS';
+        }
         return 'Safari iOS';
     }
-    if (lower.includes('android')) {
-        if (lower.includes('chrome')) return 'Chrome Android';
-        return 'Android Browser';
-    }
-
-    // Desktop
-    if (lower.includes('edg/')) return 'Edge';
-    if (lower.includes('firefox')) return 'Firefox';
-    if (lower.includes('chrome')) return 'Chrome';
-    if (lower.includes('safari')) return 'Safari';
-
-    return 'Unknown';
-}
+    
+    // Android detection
+    if (lowerUA.includes('android'))
 
 function parseUserAgent(ua) {
     if (ua.includes('Chrome')) return 'Chrome';
