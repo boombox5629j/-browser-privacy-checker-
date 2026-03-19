@@ -3,75 +3,68 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loading = document.getElementById('loading');
     const results = document.getElementById('results');
     
-    // Collect browser data
-    const browserData = collectBrowserData();
-    
-    // Calculate risk score
-    const riskScore = calculateRiskScore(browserData);
-    const riskLevel = getRiskLevel(riskScore);
-    
     // Display results
-    displayResults(browserData, riskScore, riskLevel);
+    displayResults();
     
     loading.classList.add('hidden');
     results.classList.remove('hidden');
 });
 
-function parseUserAgent(ua) {
-    const lowerUA = ua.toLowerCase();
+// Canvas fingerprint
+function generateCanvasFingerprint() {
+    const canvas = document.getElementById('canvas-fp');
+    const ctx = canvas.getContext('2d');
     
-    // iPhone/iPad detection FIRST (most important)
-    if (lowerUA.includes('iphone') || lowerUA.includes('ipad')) {
-        if (lowerUA.includes('crios') || lowerUA.includes('chrome')) {
-            return 'Chrome iOS';
-        }
-        if (lowerUA.includes('fxios')) {
-            return 'Firefox iOS';
-        }
-        return 'Safari iOS';
-    }
-    
-    // Android detection
-    if (lowerUA.includes('android'))
-
-function parseUserAgent(ua) {
-    if (ua.includes('Chrome')) return 'Chrome';
-    if (ua.includes('Firefox')) return 'Firefox';
-    if (ua.includes('Safari')) return 'Safari';
-    if (ua.includes('Edge')) return 'Edge';
-    return 'Unknown';
+    ctx.fillStyle = '#f0f0f0';
+    ctx.fillRect(0, 0, 200, 60);
+    ctx.fillStyle = '#000';
+    ctx.font = '14px Arial';
+    ctx.fillText('Fingerprint test 🖼️', 2, 30);
 }
 
-function calculateRiskScore(data) {
-    let score = 0;
+// WebGL fingerprint
+function getWebGLFingerprint() {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl) return 'WebGL not supported';
     
-    // Cookies enabled? (+20)
-    if (data.cookiesEnabled) score += 20;
+    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    const vendor = debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
+    const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
     
-    // Common screen sizes are more trackable (+15)
-    if ([1366, 1920, 1536].includes(data.screenWidth)) score += 15;
-    
-    // Default language (+10)
-    if (data.language === 'en-US' || data.language === 'en') score += 10;
-    
-    // No Do Not Track (+15)
-    if (data.doNotTrack === 'unspecified' || !data.doNotTrack) score += 15;
-    
-    // More CPU cores = more unique (+10)
-    if (data.cpuCores > 4) score += 10;
-    
-    return Math.min(score, 100);
+    return `${vendor} | ${renderer}`.replace(/\s+/g, ' ').trim();
 }
 
-function getRiskLevel(score) {
-    if (score <= 30) return { label: 'Low', color: 'low' };
-    if (score <= 60) return { label: 'Medium', color: 'medium' };
-    return { label: 'High', color: 'high' };
+// Show all fingerprints
+function showFingerprints() {
+    generateCanvasFingerprint();
+    document.getElementById('webgl-info').textContent = getWebGLFingerprint();
 }
 
-function displayResults(data, score, risk) {
+// Main display function
+function displayResults() {
+    // Generate fingerprints FIRST
+    showFingerprints();
+    
+    // Basic browser data (add collectBrowserData() later)
+    const data = {
+        browser: navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Other',
+        platform: navigator.platform,
+        screenWidth: screen.width,
+        screenHeight: screen.height,
+        language: navigator.language,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        cookiesEnabled: navigator.cookieEnabled,
+        doNotTrack: navigator.doNotTrack,
+        cpuCores: navigator.hardwareConcurrency || 0,
+        deviceMemory: navigator.deviceMemory || 'N/A'
+    };
+    
+    const score = calculateRiskScore(data);
+    const risk = getRiskLevel(score);
+    
     // Risk meter
-    document.getElementById('risk-label').textContent = `${risk.label} Tracking Risk`;
+    document.getElementById('risk-label').textContent = `${risk.label} Risk`;
     document.getElementById('risk-label').className = risk.color;
     document.getElementById('risk-score').textContent = score;
     document.getElementById('risk-score').className = risk.color;
@@ -82,62 +75,41 @@ function displayResults(data, score, risk) {
     document.getElementById('device-info').innerHTML = `
         <div class="info-item"><span>Browser:</span><span>${data.browser}</span></div>
         <div class="info-item"><span>Platform:</span><span>${data.platform}</span></div>
-        <div class="info-item"><span>User Agent:</span><span>${data.userAgent.slice(0, 50)}...</span></div>
         <div class="info-item"><span>Cookies:</span><span>${data.cookiesEnabled ? 'Enabled' : 'Disabled'}</span></div>
-        <div class="info-item"><span>Do Not Track:</span><span>${data.doNotTrack}</span></div>
+        <div class="info-item"><span>Do Not Track:</span><span>${data.doNotTrack || 'Off'}</span></div>
     `;
     
     // Screen info
     document.getElementById('screen-info').innerHTML = `
-        <div class="info-item"><span>Resolution:</span><span>${data.screenWidth} × ${data.screenHeight}</span></div>
-        <div class="info-item"><span>Color Depth:</span><span>${data.colorDepth} bits</span></div>
+        <div class="info-item"><span>Resolution:</span><span>${data.screenWidth}×${data.screenHeight}</span></div>
         <div class="info-item"><span>CPU Cores:</span><span>${data.cpuCores}</span></div>
-        <div class="info-item"><span>Device Memory:</span><span>${data.deviceMemory} GB</span></div>
+        <div class="info-item"><span>Device Memory:</span><span>${data.deviceMemory}</span></div>
     `;
     
-    // Location info with IP retry
-document.getElementById('location-info').innerHTML = `
-    <div class="info-item"><span>Language:</span><span>${data.language}</span></div>
-    <div class="info-item"><span>Time Zone:</span><span>${data.timezone}</span></div>
-    <div class="info-item"><span>IP City:</span><span>${data.ipCity || 'Loading...'}</span></div>
-    <div class="info-item"><span>Country:</span><span>${data.ipCountry || 'Loading...'}</span></div>
-`;
-
-// Auto-refresh IP every 3 seconds (max 3 tries)
-let ipAttempts = 0;
-const refreshIP = async () => {
-    if (ipAttempts > 2) return;
-    
-    try
+    // Location clues
+    document.getElementById('location-info').innerHTML = `
+        <div class="info-item"><span>Language:</span><span>${data.language}</span></div>
+        <div class="info-item"><span>Time Zone:</span><span>${data.timezone}</span></div>
+    `;
     
     // Protection tips
     document.getElementById('protection-tips').innerHTML = `
-        <div class="tip">🛡️ Use privacy-focused browsers like Brave or Firefox with privacy extensions</div>
-        <div class="tip">🔒 Enable "Do Not Track" and block third-party cookies</div>
-        <div class="tip">🌐 Use VPN for sensitive browsing</div>
-        <div class="tip">📱 Test in private/incognito mode to see differences</div>
+        <div class="tip">🛡️ Use Brave/Firefox + uBlock Origin</div>
+        <div class="tip">🔒 VPN + CanvasBlocker extension</div>
+        <div class="tip">📱 Test incognito mode differences</div>
     `;
-function generateCanvasFingerprint() {
-    const canvas = document.getElementById('canvas-fp');
-// WebGL fingerprint
-const webglFP
-    const ctx = canvas.getContext('2d');
-    
-    // Draw fingerprint pattern
-    ctx.fillStyle = '#f0f0f0';
-    ctx.fillRect(0, 0, 200, 60);
-    ctx.fillStyle
-function getWebGLFingerprint() {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    
-    if (!gl) return 'WebGL not supported';
-    
-    // Get renderer/vendor
-    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-    const vendor = debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
-    const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
-    
-    return `${vendor} | ${renderer}`.replace(/\s+/g, ' ').trim();
 }
+
+function calculateRiskScore(data) {
+    let score = 20; // Base
+    if (data.cookiesEnabled) score += 20;
+    if (data.cpuCores > 4) score += 15;
+    if (data.language === 'en-US') score += 10;
+    return Math.min(score + 35, 100); // Demo score
+}
+
+function getRiskLevel(score) {
+    if (score <= 40) return { label: 'Low', color: 'low' };
+    if (score <= 70) return { label: 'Medium', color: 'medium' };
+    return { label: 'High', color: 'high' };
 }
