@@ -38,19 +38,19 @@
                     <div id="location-info"></div>
                 </div>
                 
-                <!-- ✅ FIXED Canvas -->
+                <!-- ✅ Canvas + Hash -->
                 <div class="info-card">
                     <h3>🖼️ Canvas Fingerprint</h3>
                     <canvas id="canvas-fp" width="200" height="60" 
                             style="border:1px solid #ccc; display:block; margin:8px 0;"></canvas>
+                    <div id="canvas-hash" style="font-family:monospace;font-size:12px;background:#f8f9fa;padding:4px;border-radius:3px;margin-top:4px;"></div>
                     <small>Your unique canvas rendering (invisible to you)</small>
-                </div>
+                </div>  <!-- ✅ FIXED: Proper </div> -->
                 
                 <!-- ✅ WebGL GPU -->
                 <div class="info-card">
                     <h3>🎮 WebGL GPU Fingerprint</h3>
-                    <div id="webgl-info" 
-                         style="font-family:monospace; background:#f0f8ff; padding:8px; border-radius:4px;"></div>
+                    <div id="webgl-info" style="font-family:monospace; background:#f0f8ff; padding:8px; border-radius:4px;"></div>
                     <small>Graphics card signature (NVIDIA/AMD/Intel)</small>
                 </div>
             </div>
