@@ -4,24 +4,26 @@
 // =============================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const loading = document.getElementById('loading');
-    const results = document.getElementById('results');
     await displayResults();
-    loading.classList.add('hidden');
-    results.classList.remove('hidden');
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('results').classList.remove('hidden');
 });
 
-// ========== CANVAS FINGERPRINT ==========
+// ========== CANVAS ==========
 function generateCanvasFingerprint() {
     const canvas = document.getElementById('canvas-fp');
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#f0f0f0';
+    ctx.clearRect(0, 0, 200, 60);
+    ctx.fillStyle = '#e8f4f8';
     ctx.fillRect(0, 0, 200, 60);
-    ctx.fillStyle = '#000';
-    ctx.font = '14px Arial';
-    ctx.fillText('Canvas FP Test ' + Date.now(), 2, 30);
-    ctx.fillStyle = 'rgba(255,0,0,0.2)';
-    ctx.fillRect(10, 5, 80, 20);
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 13px Arial';
+    ctx.fillText('FP:' + navigator.language, 4, 22);
+    ctx.font = '11px monospace';
+    ctx.fillStyle = '#0066cc';
+    ctx.fillText(screen.width + 'x' + screen.height + ' ' + navigator.platform, 4, 42);
+    ctx.fillStyle = 'rgba(255,100,0,0.3)';
+    ctx.fillRect(120, 8, 70, 20);
 }
 
 function canvasHash() {
@@ -34,48 +36,50 @@ function canvasHash() {
     return 'fp_' + Math.abs(hash).toString(16).slice(0, 12);
 }
 
-// ========== WEBGL FINGERPRINT ==========
+// ========== WEBGL ==========
 function getWebGLFingerprint() {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    if (!gl) return 'WebGL not supported';
-    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-    const vendor = debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
-    const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
-    return `${vendor} | ${renderer}`.replace(/\s+/g, ' ').trim();
+    try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (!gl) return 'WebGL not supported';
+        const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+        const vendor = dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
+        const renderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+        return (vendor + ' | ' + renderer).replace(/\s+/g, ' ').trim();
+    } catch (e) {
+        return 'WebGL blocked';
+    }
 }
 
-// ========== DEVICE MODEL DETECTION ==========
+// ========== DEVICE MODEL ==========
 function getDeviceModel() {
     const ua = navigator.userAgent;
     const w = screen.width, h = screen.height;
-
     if (/iPhone/.test(ua)) {
         const res = Math.max(w, h);
-        if (res >= 2796) return 'iPhone 14 Pro Max / 15 Pro Max';
-        if (res >= 2532) return 'iPhone 12 / 13 / 14 Pro';
-        if (res >= 2340) return 'iPhone 12 Mini / 13 Mini';
+        if (res >= 2796) return 'iPhone 14/15 Pro Max';
+        if (res >= 2532) return 'iPhone 12/13/14 Pro';
+        if (res >= 2340) return 'iPhone 12/13 Mini';
         if (res >= 1792) return 'iPhone XR / 11';
         if (res >= 1334) return 'iPhone SE / 8';
-        return 'iPhone (Unknown Model)';
+        return 'iPhone (Unknown)';
     }
     if (/iPad/.test(ua)) return 'Apple iPad';
     if (/Samsung/.test(ua)) {
-        const match = ua.match(/SM-[A-Z0-9]+/);
-        return match ? `Samsung ${match[0]}` : 'Samsung Android';
+        const m = ua.match(/SM-[A-Z0-9]+/);
+        return m ? 'Samsung ' + m[0] : 'Samsung Android';
     }
     if (/Pixel/.test(ua)) {
-        const match = ua.match(/Pixel\s?[\dA-Za-z]+/);
-        return match ? `Google ${match[0]}` : 'Google Pixel';
+        const m = ua.match(/Pixel\s?[\dA-Za-z]+/);
+        return m ? 'Google ' + m[0] : 'Google Pixel';
     }
     if (/Redmi/.test(ua)) return 'Xiaomi Redmi';
-    if (/Mi\s/.test(ua)) return 'Xiaomi Mi';
     if (/OnePlus/.test(ua)) return 'OnePlus';
     if (/Huawei/.test(ua)) return 'Huawei';
     if (/Android/.test(ua)) return 'Android Device';
     if (/Win/.test(navigator.platform)) {
         if (w <= 1366) return 'Windows Laptop (HD)';
-        if (w <= 1920) return 'Windows Desktop / Laptop (FHD)';
+        if (w <= 1920) return 'Windows Laptop/Desktop (FHD)';
         return 'Windows Desktop (QHD/4K)';
     }
     if (/Mac/.test(navigator.platform)) return 'Apple Mac';
@@ -83,42 +87,42 @@ function getDeviceModel() {
     return 'Unknown Device';
 }
 
-// ========== AUDIO FINGERPRINT ==========
+// ========== AUDIO ==========
 async function getAudioFingerprint() {
     try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = ctx.createOscillator();
-        const analyser = ctx.createAnalyser();
-        const gainNode = ctx.createGain();
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const analyser = audioCtx.createAnalyser();
+        const gainNode = audioCtx.createGain();
         gainNode.gain.value = 0;
         oscillator.connect(analyser);
         analyser.connect(gainNode);
-        gainNode.connect(ctx.destination);
+        gainNode.connect(audioCtx.destination);
         oscillator.type = 'triangle';
         oscillator.frequency.value = 440;
         oscillator.start(0);
-        oscillator.stop(ctx.currentTime + 0.1);
+        oscillator.stop(audioCtx.currentTime + 0.1);
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
         analyser.getByteFrequencyData(dataArray);
         let hash = 0;
         for (let i = 0; i < 32; i++) hash = ((hash << 5) - hash + dataArray[i]) >>> 0;
-        await ctx.close();
+        await audioCtx.close();
         return 'audio_' + Math.abs(hash).toString(16).slice(0, 10);
     } catch (e) {
         return 'audio_blocked';
     }
 }
 
-// ========== SHOW ALL FINGERPRINTS ==========
+// ========== SHOW FINGERPRINTS ==========
 async function showFingerprints() {
     generateCanvasFingerprint();
-    document.getElementById('webgl-info').textContent = getWebGLFingerprint();
     document.getElementById('canvas-hash').textContent = canvasHash();
+    document.getElementById('webgl-info').textContent = getWebGLFingerprint();
     document.getElementById('device-model').textContent = getDeviceModel();
     document.getElementById('audio-hash').textContent = await getAudioFingerprint();
 }
 
-// ========== MAIN DISPLAY ==========
+// ========== MAIN ==========
 async function displayResults() {
     await showFingerprints();
 
@@ -148,15 +152,13 @@ async function displayResults() {
     const score = calculateRiskScore(data);
     const risk = getRiskLevel(score);
 
-    // Risk meter
-    document.getElementById('risk-label').textContent = `${risk.label} Risk`;
+    document.getElementById('risk-label').textContent = risk.label + ' Risk';
     document.getElementById('risk-label').className = risk.color;
     document.getElementById('risk-score').textContent = score;
     document.getElementById('risk-score').className = risk.color;
-    document.getElementById('risk-fill').style.width = `${score}%`;
-    document.getElementById('risk-fill').className = `risk-fill ${risk.color}`;
+    document.getElementById('risk-fill').style.width = score + '%';
+    document.getElementById('risk-fill').className = 'risk-fill ' + risk.color;
 
-    // Device info
     document.getElementById('device-info').innerHTML = `
         <div class="info-item"><span>Browser:</span><span>${data.browser}</span></div>
         <div class="info-item"><span>Platform:</span><span>${data.platform}</span></div>
@@ -166,7 +168,6 @@ async function displayResults() {
         <div class="info-item"><span>PDF Viewer:</span><span>${data.pdfViewer ? 'Yes' : 'No'}</span></div>
     `;
 
-    // Screen info
     document.getElementById('screen-info').innerHTML = `
         <div class="info-item"><span>Resolution:</span><span>${data.screenWidth}×${data.screenHeight}</span></div>
         <div class="info-item"><span>Color Depth:</span><span>${data.colorDepth} bits</span></div>
@@ -174,25 +175,24 @@ async function displayResults() {
         <div class="info-item"><span>Device Memory:</span><span>${data.deviceMemory} GB</span></div>
     `;
 
-    // Location + Real IP
     document.getElementById('location-info').innerHTML = `
         <div class="info-item"><span>Language:</span><span>${data.language}</span></div>
         <div class="info-item"><span>Time Zone:</span><span>${data.timezone}</span></div>
-        <div class="info-item"><span>IP City:</span><span>Loading...</span></div>
-        <div class="info-item"><span>ISP:</span><span>Loading...</span></div>
+        <div class="info-item"><span>IP City:</span><span id="ip-city">Loading...</span></div>
+        <div class="info-item"><span>ISP:</span><span id="ip-isp">Loading...</span></div>
     `;
 
     fetch('https://ipapi.co/json/')
         .then(r => r.json())
-        .then(ipdata => {
-            document.querySelector('#location-info .info-item:nth-child(3) span:last-child').textContent = ipdata.city || 'Unknown';
-            document.querySelector('#location-info .info-item:nth-child(4) span:last-child').textContent = ipdata.org || 'Unknown';
+        .then(d => {
+            document.getElementById('ip-city').textContent = d.city || 'Unknown';
+            document.getElementById('ip-isp').textContent = d.org || 'Unknown';
         })
         .catch(() => {
-            document.querySelector('#location-info .info-item:nth-child(3) span:last-child').textContent = 'Blocked';
+            document.getElementById('ip-city').textContent = 'Blocked';
+            document.getElementById('ip-isp').textContent = 'Blocked';
         });
 
-    // Protection tips
     document.getElementById('protection-tips').innerHTML = `
         <div class="tip">🛡️ Use Brave or Firefox + uBlock Origin</div>
         <div class="tip">🔒 Enable VPN + CanvasBlocker extension</div>
@@ -201,7 +201,6 @@ async function displayResults() {
     `;
 }
 
-// ========== RISK SCORING ==========
 function calculateRiskScore(data) {
     let score = 20;
     if (data.cookiesEnabled) score += 20;

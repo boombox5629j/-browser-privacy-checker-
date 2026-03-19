@@ -10,9 +10,9 @@
     <div class="container">
         <h1>🕵️ Browser Privacy Exposure Viewer<br><small>by GHANSHYAM SHARMA'S - Hackathon 2026</small></h1>
         <p class="subtitle">Websites track you using this information without cookies</p>
-        
+
         <div id="loading" class="loading">🔍 Scanning your browser fingerprint...</div>
-        
+
         <div id="results" class="results hidden">
             <div class="risk-meter">
                 <h2 id="risk-label">Calculating...</h2>
@@ -21,51 +21,44 @@
                 </div>
                 <span id="risk-score">0</span>
             </div>
-            
+
             <div class="info-grid">
 
-                <!-- ✅ Device & Browser -->
                 <div class="info-card">
                     <h3>📱 Device & Browser</h3>
                     <div id="device-info"></div>
                 </div>
-                
-                <!-- ✅ Screen & Hardware -->
+
                 <div class="info-card">
                     <h3>🖥️ Screen & Hardware</h3>
                     <div id="screen-info"></div>
                 </div>
 
-                <!-- ✅ Device Model -->
                 <div class="info-card">
                     <h3>📲 Device Model</h3>
                     <div id="device-model" style="font-family:monospace;background:#f0f8ff;padding:8px;border-radius:4px;"></div>
-                    <small>Detected from screen + User Agent (90% accurate)</small>
+                    <small>Detected from screen + User Agent</small>
                 </div>
-                
-                <!-- ✅ Location Clues -->
+
                 <div class="info-card">
                     <h3>🌍 Location Clues</h3>
                     <div id="location-info"></div>
                 </div>
-                
-                <!-- ✅ Canvas Fingerprint -->
+
                 <div class="info-card">
                     <h3>🖼️ Canvas Fingerprint</h3>
-                    <canvas id="canvas-fp" width="200" height="60" 
-                            style="border:1px solid #ccc; display:block; margin:8px 0;"></canvas>
+                    <canvas id="canvas-fp" width="200" height="60"
+                        style="border:1px solid #ccc;display:block;margin:8px 0;"></canvas>
                     <div id="canvas-hash" style="font-family:monospace;font-size:12px;background:#f8f9fa;padding:4px;border-radius:3px;margin-top:4px;"></div>
                     <small>Your unique canvas rendering hash</small>
                 </div>
-                
-                <!-- ✅ WebGL GPU -->
+
                 <div class="info-card">
                     <h3>🎮 WebGL GPU Fingerprint</h3>
                     <div id="webgl-info" style="font-family:monospace;background:#f0f8ff;padding:8px;border-radius:4px;"></div>
                     <small>Graphics card signature (NVIDIA/AMD/Intel)</small>
                 </div>
 
-                <!-- ✅ Audio Fingerprint -->
                 <div class="info-card">
                     <h3>🔊 Audio Fingerprint</h3>
                     <div id="audio-hash" style="font-family:monospace;background:#f0fff0;padding:8px;border-radius:4px;"></div>
@@ -73,14 +66,14 @@
                 </div>
 
             </div>
-            
+
             <div class="tips">
                 <h3>🛡️ How to Protect Yourself</h3>
                 <div id="protection-tips"></div>
             </div>
         </div>
     </div>
-    
+
     <script src="script.js"></script>
 </body>
 </html>
