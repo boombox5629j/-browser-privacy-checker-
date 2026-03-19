@@ -43,6 +43,7 @@ function showFingerprints() {
 
 // Main display function
 function displayResults() {
+showFingerprints();  // This draws canvas + shows WebGL
     // Generate fingerprints FIRST
     showFingerprints();
     
@@ -58,6 +59,17 @@ function displayResults() {
         doNotTrack: navigator.doNotTrack,
         cpuCores: navigator.hardwareConcurrency || 0,
         deviceMemory: navigator.deviceMemory || 'N/A'
+function showFingerprints() {
+    // Draw canvas
+    const canvas = document.getElementById('canvas-fp');
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#f0f0f0'; ctx.fillRect(0,0,200,60);
+    ctx.fillStyle = '#000'; ctx.font = '14px Arial';
+    ctx.fillText('Canvas FP Test ' + Date.now(), 2, 30);
+    
+    // Show WebGL
+    document.getElementById('webgl-info').textContent = getWebGLFingerprint();
+}
     };
     
     const score = calculateRiskScore(data);
@@ -86,11 +98,24 @@ function displayResults() {
         <div class="info-item"><span>Device Memory:</span><span>${data.deviceMemory}</span></div>
     `;
     
-    // Location clues
-    document.getElementById('location-info').innerHTML = `
-        <div class="info-item"><span>Language:</span><span>${data.language}</span></div>
-        <div class="info-item"><span>Time Zone:</span><span>${data.timezone}</span></div>
-    `;
+    // Location clues + Real IP
+document.getElementById('location-info').innerHTML = `
+    <div class="info-item"><span>Language:</span><span>${data.language}</span></div>
+    <div class="info-item"><span>Time Zone:</span><span>${data.timezone}</span></div>
+    <div class="info-item"><span>IP City:</span><span>Loading...</span></div>
+    <div class="info-item"><span>ISP:</span><span>Loading...</span></div>
+`;
+
+// Fetch real IP (runs async)
+fetch('https://ipapi.co/json/')
+  .then(r => r.json())
+  .then(ipdata => {
+    document.querySelector('#location-info .info-item:nth-child(3) span:last-child').textContent = ipdata.city || 'Unknown';
+    document.querySelector('#location-info .info-item:nth-child(4) span:last-child').textContent = ipdata.org || 'Unknown';
+  })
+  .catch(() => {
+    document.querySelector('#location-info .info-item:nth-child(3) span:last-child').textContent = 'Blocked';
+  });
     
     // Protection tips
     document.getElementById('protection-tips').innerHTML = `
