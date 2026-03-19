@@ -90,7 +90,7 @@ async function getAudioFingerprint() {
         const oscillator = ctx.createOscillator();
         const analyser = ctx.createAnalyser();
         const gainNode = ctx.createGain();
-        gainNode.gain.value = 0; // Silent
+        gainNode.gain.value = 0;
         oscillator.connect(analyser);
         analyser.connect(gainNode);
         gainNode.connect(ctx.destination);
