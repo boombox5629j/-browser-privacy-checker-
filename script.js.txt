@@ -17,22 +17,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     results.classList.remove('hidden');
 });
 
-function collectBrowserData() {
-    return {
-        userAgent: navigator.userAgent,
-        browser: parseUserAgent(navigator.userAgent),
-        platform: navigator.platform,
-        language: navigator.language,
-        languages: navigator.languages?.join(', ') || 'N/A',
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        cookiesEnabled: navigator.cookieEnabled,
-        screenWidth: screen.width,
-        screenHeight: screen.height,
-        colorDepth: screen.colorDepth,
-        cpuCores: navigator.hardwareConcurrency || 'N/A',
-        deviceMemory: navigator.deviceMemory || 'N/A',
-        doNotTrack: navigator.doNotTrack || 'N/A'
-    };
+function parseUserAgent(ua) {
+    const lower = ua.toLowerCase();
+
+    // Mobile detection
+    if (lower.includes('iphone') || lower.includes('ipad')) {
+        if (lower.includes('crios')) return 'Chrome iOS';
+        return 'Safari iOS';
+    }
+    if (lower.includes('android')) {
+        if (lower.includes('chrome')) return 'Chrome Android';
+        return 'Android Browser';
+    }
+
+    // Desktop
+    if (lower.includes('edg/')) return 'Edge';
+    if (lower.includes('firefox')) return 'Firefox';
+    if (lower.includes('chrome')) return 'Chrome';
+    if (lower.includes('safari')) return 'Safari';
+
+    return 'Unknown';
 }
 
 function parseUserAgent(ua) {
